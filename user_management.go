@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awss3"
 
 	// "github.com/aws/aws-cdk-go/awscdk/v2/awssqs"
 	"github.com/aws/constructs-go/constructs/v10"
@@ -43,6 +44,18 @@ table:=awsdynamodb.NewTable(stack,jsii.String("userManagementTable"),&awsdynamod
 })
 
 table.GrantReadWriteData(myLambda)
+
+
+// bucket s3
+
+myBucket:=awss3.NewBucket(stack,jsii.String("userManagementBucket"),&awss3.BucketProps{
+	Versioned: jsii.Bool(true),
+	BucketName: jsii.String("usermanagementbucketupload"),
+
+})
+
+ myBucket.GrantReadWrite(myLambda,nil)
+
 
 	return stack
 }

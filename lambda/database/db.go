@@ -66,6 +66,9 @@ func (u DynamoDBClient) CreateUser(user types.User) error{
         S: aws.String(user.Password),
 
       },
+      "photo_url":{
+        S: aws.String(user.PhotoURL),
+      },
     },
   })
 

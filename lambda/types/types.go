@@ -8,6 +8,7 @@ type User struct{
 	Username string `json:"username"`
 	Email string `json:"email"`
 	Password string `json:"password"`
+	PhotoURL    string  `json:"photo_url"`
 }
 
 func NewUser(user User)(User,error){
@@ -22,6 +23,7 @@ func NewUser(user User)(User,error){
 		Username: user.Username,
 		Email: user.Email,
 		Password: string(hashedPass),
+		PhotoURL: user.PhotoURL,
 	},nil
 }
 
