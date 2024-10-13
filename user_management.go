@@ -2,6 +2,9 @@ package main
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
+
 	// "github.com/aws/aws-cdk-go/awscdk/v2/awssqs"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
@@ -19,11 +22,27 @@ func NewUserManagementStack(scope constructs.Construct, id string, props *UserMa
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
 	// The code that defines your stack goes here
+// aws lambda code :
+	 myLambda:=awslambda.NewFunction(stack,jsii.String("userManagementLambda"),
+		&awslambda.FunctionProps{
+			Runtime: awslambda.Runtime_PROVIDED_AL2023(),
+			Code: awslambda.Code_FromAsset(jsii.String("lambda/function.zip"),nil),
+			Handler: jsii.String("main"),
+			
+		})
 
-	// example resource
-	// queue := awssqs.NewQueue(stack, jsii.String("UserManagementQueue"), &awssqs.QueueProps{
-	// 	VisibilityTimeout: awscdk.Duration_Seconds(jsii.Number(300)),
-	// })
+
+// aws dynamodb code :
+
+table:=awsdynamodb.NewTable(stack,jsii.String("userManagementTable"),&awsdynamodb.TableProps{
+	PartitionKey: &awsdynamodb.Attribute{
+		 Name: jsii.String("username"),
+		 Type: awsdynamodb.AttributeType_STRING,
+	},
+	TableName: jsii.String("userManagementTable"),
+})
+
+table.GrantReadWriteData(myLambda)
 
 	return stack
 }
