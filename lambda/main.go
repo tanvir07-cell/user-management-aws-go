@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"usermanagement.tanvirrifat.io/app"
 	"usermanagement.tanvirrifat.io/types"
@@ -31,7 +33,20 @@ func main(){
 
 	app:= app.NewApp()
 
-	lambda.Start(app.ApiHandler.CreateUser)
+	// lambda.Start(app.ApiHandler.CreateUser)
+
+	lambda.Start(func(request events.APIGatewayProxyRequest)(events.APIGatewayProxyResponse,error){
+		switch request.Path{
+		case "/register":
+			return app.ApiHandler.CreateUser(request)
+		default:
+			return events.APIGatewayProxyResponse{
+				StatusCode: http.StatusNotFound,
+				Body: "Not Found",
+			},nil
+		}
+		
+	})
 
 	
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awss3"
@@ -55,6 +56,27 @@ myBucket:=awss3.NewBucket(stack,jsii.String("userManagementBucket"),&awss3.Bucke
 })
 
  myBucket.GrantReadWrite(myLambda,nil)
+
+
+// api gateway:
+api:=awsapigateway.NewRestApi(stack,jsii.String("userManagementApi"),&awsapigateway.RestApiProps{
+	DefaultCorsPreflightOptions: &awsapigateway.CorsOptions{
+			AllowHeaders: jsii.Strings("Content-Type","Authorization"),
+			AllowMethods: jsii.Strings("GET","POST","DELETE","PUT","OPTIONS"),
+			AllowOrigins: jsii.Strings("*"),
+	},
+		DeployOptions: &awsapigateway.StageOptions{
+			LoggingLevel: awsapigateway.MethodLoggingLevel_INFO,
+		},
+
+})
+
+// integration apigateway to the lambda function
+	integration:= awsapigateway.NewLambdaIntegration(myLambda,nil)
+
+	// register route
+	registerRoute:= api.Root().AddResource(jsii.String("register"),nil)
+	registerRoute.AddMethod(jsii.String("POST"),integration,nil)
 
 
 	return stack

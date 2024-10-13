@@ -3,9 +3,12 @@ package api
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -95,35 +98,79 @@ func UploadToS3(photoBase64,username string)(string,error){
 
 
 
-func (a ApiHandler) CreateUser(user types.User) error {
+func (a ApiHandler) CreateUser(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse,error) {
 	// Check if the user already exists
-	exist, err := a.db.IsUserExist(user.Username)
+
+	var registerUser types.User
+
+	err:=json.Unmarshal([]byte(request.Body),&registerUser)
+
+	if err!=nil{
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+			Body: "Bad Request",
+		},err
+	}
+
+	if registerUser.Email=="" || registerUser.Password=="" || registerUser.Username=="" {
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+			Body: "Username or Email or Password is missing",
+		},err
+	}
+
+
+
+	exist, err := a.db.IsUserExist(registerUser.Username)
 	if err != nil {
-		return fmt.Errorf("error checking if user exists: %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Body:       "Internal Server Error",
+		}, err
+
+		
 	}
 
 	if exist {
-		return fmt.Errorf("user already exists")
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusConflict,
+			Body:       "User already exists",
+		},err
 	}
 
 	// Upload the user's photo to S3
-	photoURL, err := UploadToS3(user.PhotoURL, user.Username)
+	photoURL, err := UploadToS3(registerUser.PhotoURL, registerUser.Username)
 	if err != nil {
-		return fmt.Errorf("error uploading photo to S3: %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Body:       "Internal Server Error",
+		}, err
+	
 	}
 
 	// Create a new user object with the S3 photo URL
-	user.PhotoURL = photoURL
-	createdUser, err := types.NewUser(user)
+	registerUser.PhotoURL = photoURL
+	createdUser, err := types.NewUser(registerUser)
 	if err != nil {
-		return fmt.Errorf("error creating user: %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Body:       "Internal Server Error",
+		}, err
+		
 	}
 
 	// Store the user in the DynamoDB table
 	err = a.db.CreateUser(createdUser)
 	if err != nil {
-		return fmt.Errorf("error creating user in DynamoDB: %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Body:       "Internal Server Error",
+		}, err
 	}
 
-	return nil
+	return events.APIGatewayProxyResponse{
+		StatusCode: http.StatusCreated,
+		Body:       "User created successfully",
+	}, nil
+	
 }
