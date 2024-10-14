@@ -11,6 +11,12 @@ type User struct{
 	PhotoURL    string  `json:"photo_url"`
 }
 
+type LoginRequesst struct{
+	Username string `json:"username"`
+	Email string `json:"email"`
+	Password string `json:"password"`
+}
+
 func NewUser(user User)(User,error){
 	// hash password using bcrypt
 	hashedPass,err:=bcrypt.GenerateFromPassword([]byte(user.Password),bcrypt.DefaultCost)
@@ -27,4 +33,8 @@ func NewUser(user User)(User,error){
 	},nil
 }
 
-// func ValidatePassword(hashedPassword,plain)
+func ValidatePassword(hashedPassword,plainPass string)bool{
+	 err:=bcrypt.CompareHashAndPassword([]byte(hashedPassword),[]byte(plainPass))
+
+  return err==nil
+}

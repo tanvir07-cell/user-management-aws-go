@@ -78,6 +78,11 @@ api:=awsapigateway.NewRestApi(stack,jsii.String("userManagementApi"),&awsapigate
 	registerRoute:= api.Root().AddResource(jsii.String("register"),nil)
 	registerRoute.AddMethod(jsii.String("POST"),integration,nil)
 
+	// login route
+
+		loginRoute:= api.Root().AddResource(jsii.String("login"),nil)
+	loginRoute.AddMethod(jsii.String("POST"),integration,nil)
+
 
 	return stack
 }

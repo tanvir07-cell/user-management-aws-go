@@ -39,6 +39,10 @@ func main(){
 		switch request.Path{
 		case "/register":
 			return app.ApiHandler.CreateUser(request)
+
+			case "/login":
+			return app.ApiHandler.LoginUser(request)
+		
 		default:
 			return events.APIGatewayProxyResponse{
 				StatusCode: http.StatusNotFound,

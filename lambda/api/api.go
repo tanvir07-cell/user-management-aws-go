@@ -174,3 +174,76 @@ func (a ApiHandler) CreateUser(request events.APIGatewayProxyRequest) (events.AP
 	}, nil
 	
 }
+
+
+
+
+// login user handler 
+
+func (a ApiHandler) LoginUser(request events.APIGatewayProxyRequest)(events.APIGatewayProxyResponse,error){
+	
+	// here is our requested struct:
+	var loginRequest types.LoginRequesst
+
+	err:=json.Unmarshal([]byte(request.Body),&loginRequest)
+
+	if err!=nil{
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+			Body: "Bad Request",
+		},err
+	}
+
+	if loginRequest.Email=="" || loginRequest.Password=="" {
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+			Body: "Email or Password is missing",
+		},err
+	}
+
+	// check if user exists
+
+	user,err:=a.db.IsUserExist(loginRequest.Username)
+
+	if err!=nil{
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Body: "Internal Server Error",
+		},err
+	}
+
+	if !user{
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusNotFound,
+			Body: "User not found",
+		},nil
+	}
+
+	// get user from db
+
+	getUser,err:=a.db.GetUser(loginRequest.Username)
+
+	if err!=nil{
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Body: "Internal Server Error",
+		},err
+	}
+
+	// validate password
+	
+
+	if !types.ValidatePassword(getUser.Password,loginRequest.Password){
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusUnauthorized,
+			Body: "Invalid Password",
+		},nil
+	}
+
+	return events.APIGatewayProxyResponse{
+		StatusCode: http.StatusOK,
+		Body: "Login Successful",
+	},nil
+	
+
+}
